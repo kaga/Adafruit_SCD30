@@ -2,6 +2,26 @@
 
 A Particle project to connect to Adafruit SDA30 Sensor
 
+## Dev Particle Commands 
+
+### List Connected USB Device
+
+```bash
+> particle usb list
+```
+
+### Get Serial output
+
+```bash
+> particle serial monitor
+```
+
+### flash to a device
+```bash
+> particle usb dfu
+> particle flash --usb ./file.bin
+```
+
 ## Welcome to your project!
 
 Every new Particle project is composed of 3 important elements that you'll see have been created in your project directory for Adafruit_SCD30.
