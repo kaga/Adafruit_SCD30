@@ -1,11 +1,23 @@
 // Basic demo for readings from Adafruit SCD30
 #include <Adafruit_SCD30.h>
+#include "MQTT.h"
 
 Adafruit_SCD30  scd30;
 
 double temperatureInC = 0;
 double relativeHumidity = 0;
 double co2ppm = 0;
+
+byte brokerIP[] = {192,168,0,1}; 
+MQTT client(brokerIP, 1883, 512, 65, callback);
+
+String deviceName = System.deviceID();
+String mqttUsername = "";
+String mqttPassword = ""; 
+
+String mqttPublishChannel = "particle/sensor/" + deviceName;
+
+void callback(char* topic, byte* payload, unsigned int length) {}
 
 void setup(void) {
   Serial.begin(115200);
@@ -20,11 +32,6 @@ void setup(void) {
   }
   Serial.println("SCD30 Found!");
 
-
-  // if (!scd30.setMeasurementInterval(10)){
-  //   Serial.println("Failed to set measurement interval");
-  //   while(1){ delay(10);}
-  // }
   Serial.print("Measurement Interval: "); 
   Serial.print(scd30.getMeasurementInterval()); 
   Serial.println(" seconds");
@@ -32,6 +39,10 @@ void setup(void) {
   Particle.variable("temperature", &temperatureInC, DOUBLE);
   Particle.variable("humidity", &relativeHumidity, DOUBLE);
   Particle.variable("co2", &co2ppm, DOUBLE);
+
+  Particle.variable("mqttChannel", mqttPublishChannel);
+
+  connectMQTT();
 }
 
 void loop() {
@@ -75,14 +86,27 @@ void loop() {
         relativeHumidity,
         co2ppm
       );
-      Particle.publish("Sensor", data, 60, PRIVATE);
+      // Particle.publish("Sensor", data, 60, PRIVATE);
+      if (client.isConnected()) {
+        client.publish(mqttPublishChannel, data);
+        client.loop();
+      } else {
+        Serial.println("Not Connected To MQTT");
+        RGB.color(0, 0, 255);
+        RGB.brightness(255);
+        connectMQTT();
+      }
+
       delay(60*1000);
     }
   } else {
     Serial.println("No data");
-    // Particle.publish("Log", "No data");
     RGB.color(255, 0, 0);
     RGB.brightness(255);
     delay(100);
   }
+}
+
+void connectMQTT() {
+  client.connect(deviceName, mqttUsername, mqttPassword);
 }

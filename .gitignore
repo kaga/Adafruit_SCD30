@@ -1,2 +1,5 @@
 
 .vscode
+target/
+
+src/Adafruit_SCD30.cpp
